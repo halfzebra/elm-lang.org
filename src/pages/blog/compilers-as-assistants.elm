@@ -5,11 +5,6 @@ import Blog
 import Center
 
 
-port title : String
-port title =
-  "Compilers as Assistants"
-
-
 main =
   Blog.blog
     "Compilers as Assistants"
@@ -52,7 +47,12 @@ main =
 
 
 image url =
-  img [src url, style [("display", "block"), ("margin", "1em auto")]] []
+  img
+    [ src url
+    , style [("display", "block"), ("margin", "1em auto")]
+    , alt "compiler output example"
+    ]
+    []
 
 
 content = """

@@ -3,11 +3,10 @@ module Router (router) where
 
 import Control.Applicative ((<|>))
 import Control.Monad.Trans (liftIO)
-import qualified Data.Aeson as Json
 import qualified Data.ByteString.UTF8 as Utf8
 import Snap.Core
     ( Snap, MonadSnap, dir, getParam, ifTop, modifyResponse, pass, redirect'
-    , route, setContentType, setResponseStatus, writeBuilder, writeLBS
+    , route, setContentType, setResponseStatus, writeBuilder
     )
 import Snap.Util.FileServe ( serveDirectoryWith, serveFile, simpleDirectoryConfig )
 import System.Directory (doesFileExist)
@@ -15,16 +14,12 @@ import System.FilePath ((</>))
 import qualified Text.Blaze.Html5 as H
 import qualified Text.Blaze.Html.Renderer.Utf8 as Blaze
 
-import qualified Generate
+import qualified Init.Compiler as Compiler
 import qualified Init.FileTree as FT
-import qualified Init.Guide as Guide
 
 
-router
-    :: (String -> Either Json.Value (String,String))
-    -> [(FilePath,FilePath)]
-    -> Snap ()
-router compiler pages =
+router :: [(FilePath,FilePath)] -> Snap ()
+router pages =
   ifTop (serveFile (FT.file ["pages"] "home" "html"))
     <|> servePages pages
     <|> route routes
@@ -36,19 +31,15 @@ router compiler pages =
   where
     routes =
         -- top-bar routes
-        [ ("guide", guide)
-        , ("examples/:name", examples)
+        [ ("examples/:name", examples)
 
         -- discoverable routes
         , ("try", try)
-        , ("debug", debug)
-        , ("install", install)
 
         -- called by other routes
         , ("code", emptyCode)
         , ("code/:name", code)
-        , ("compile", compile compiler)
-        , ("hotswap", hotswap compiler)
+        , ("compile", compile)
         ]
 
 
@@ -59,17 +50,6 @@ servePages pairs =
     servePage (path, html) =
         ( Utf8.fromString path
         , ifTop (serveFile html)
-        )
-
-
-guide :: Snap ()
-guide =
-  ifTop pass
-    <|> route (map chapterToRoute Guide.chapters)
-  where
-    chapterToRoute name =
-        ( Utf8.fromString name
-        , ifTop (serveFile (FT.file ["guide","html"] name "html"))
         )
 
 
@@ -84,24 +64,18 @@ examples =
       serveIfExists (FT.file ["examples",directory] name "html")
 
 
+
 -- discoverable routes
+
 
 try :: Snap ()
 try =
   serveFile (FT.file ["examples","editor"] "try" "html")
 
 
-debug :: Snap ()
-debug =
-  undefined
-
-
-install :: Snap ()
-install =
-  undefined
-
 
 -- called by other routes
+
 
 emptyCode :: Snap ()
 emptyCode =
@@ -114,18 +88,10 @@ code =
       serveIfExists (FT.file ["examples","code"] name "html")
 
 
-compile :: (String -> Either Json.Value (String,String)) -> Snap ()
-compile compiler =
+compile :: Snap ()
+compile =
   do  elmSource <- demandParam "input"
-      serveHtml (Generate.userHtml (compiler elmSource))
-
-
-hotswap :: (String -> Either Json.Value (String,String)) -> Snap ()
-hotswap compiler =
-  do  elmSource <- demandParam "input"
-      modifyResponse $ setContentType "application/javascript"
-      let json = Generate.js (compiler elmSource)
-      writeLBS (Json.encode json)
+      serveHtml =<< liftIO (Compiler.compile elmSource)
 
 
 error404 :: Snap ()
@@ -134,7 +100,9 @@ error404 =
       serveFile (FT.file ["pages"] "404" "html")
 
 
+
 -- HELPERS
+
 
 demandParam :: Utf8.ByteString -> Snap String
 demandParam param =
@@ -156,7 +124,9 @@ serveHtml html =
       writeBuilder (Blaze.renderHtmlBuilder html)
 
 
+
 -- REDIRECTS
+
 
 (==>) old new =
   (old, redirect' new 301)
@@ -185,15 +155,19 @@ redirects =
     , "blog/Pong.elm" ==> "/blog/making-pong"
     , "learn/Syntax.elm" ==> "/docs/syntax"
     , "learn/FAQ.elm" ==> "/docs/from-javascript"
-    , "learn/Understanding-Types.elm" ==> "/guide/model-the-problem"
-    , "learn/Pattern-Matching.elm" ==> "/guide/model-the-problem"
-    , "learn/Union-Types.elm" ==> "/guide/model-the-problem"
+    , "learn/Understanding-Types.elm" ==> "http://guide.elm-lang.org/types/reading_types.html"
+    , "learn/Pattern-Matching.elm" ==> "http://guide.elm-lang.org/types/union_types.html"
+    , "learn/Union-Types.elm" ==> "http://guide.elm-lang.org/types/union_types.html"
     , "learn/Records.elm" ==> "/docs/records"
     , "learn/What-is-FRP.elm" ==> "/guide/reactivity" -- TODO
     , "learn/Using-Signals.elm" ==> "/guide/reactivity" -- TODO
     , "learn/Tasks.elm" ==> "/guide/reactivity#tasks"
-    , "learn/Components.elm" ==> "/guide/interop"
-    , "learn/Ports.elm" ==> "/guide/interop"
+    , "learn/Components.elm" ==> "http://guide.elm-lang.org/interop/javascript.html"
+    , "learn/Ports.elm" ==> "http://guide.elm-lang.org/interop/javascript.html"
+    , "guide/interop" ==> "http://guide.elm-lang.org/interop/javascript.html"
+    , "guide/core-language" ==> "http://guide.elm-lang.org/core_language.html"
+    , "guide/model-the-problem" ==> "http://guide.elm-lang.org/types/union_types.html"
+    -- TODO /guide/* ==> new home
     , "guide/architecture" ==> "https://github.com/evancz/elm-architecture-tutorial/"
     ]
 

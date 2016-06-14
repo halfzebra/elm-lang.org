@@ -1,13 +1,7 @@
 import Blog
 import Center
 import Color exposing (rgb)
-import Graphics.Collage exposing (..)
-import Graphics.Element exposing (..)
 import Html
-
-
-port title : String
-port title = "Elm 0.8"
 
 
 main =
@@ -17,13 +11,19 @@ main =
     Blog.evan
     (Blog.Date 2013 5 29)
     [ Center.markdown "600px" content1
-    , Html.div
-        [Center.style (toString (widthOf dots) ++ "px")]
-        [Html.fromElement dots]
+
+    , Html.div [] [ Html.text "TODO" ]
+--    , Html.div
+--        [Center.style (toString (widthOf dots) ++ "px")]
+--        [Html.fromElement dots]
+
     , Center.markdown "600px" content2
-    , Html.div
-        [Center.style (toString (widthOf crosses) ++ "px")]
-        [Html.fromElement crosses]
+
+    , Html.div [] [ Html.text "TODO" ]
+--    , Html.div
+--        [Center.style (toString (widthOf crosses) ++ "px")]
+--        [Html.fromElement crosses]
+
     , Center.markdown "600px" content3
     ]
 
@@ -158,6 +158,7 @@ system](http://en.wikipedia.org/wiki/Cartesian_coordinate_system).
 First we should discuss how things used to work in Elm. The Old Way.
 
 <img src="/imgs/coords/flipped.jpg"
+     alt="upside down coordinates"
      style="border: 1px solid rgb(216,221,225); margin-left: 30px; float:right; width:126px; height:120px;">
 
 The JavaScript `<canvas>` uses a coordinate system that is upside down.
@@ -171,6 +172,7 @@ are trying to work with rotations and [polar
 coordinates](http://en.wikipedia.org/wiki/Polar_coordinate_system).
 
 <img src="/imgs/coords/cartesian.jpg"
+     alt="cartesian coordinates"
      style="border: 1px solid rgb(216,221,225); margin-left:30px; float:right; width:126px; height:91px;">
 
 Elm now uses the cartesian plane for rendering. The origin is in the middle
@@ -197,13 +199,6 @@ case in which having the position default to the origin is quite convenient.
 It uses the standard accent colors for the Elm website:
 
 """
-
-
-dot colr =
-  collage 50 50 [ filled colr (circle 15) ]
-
-dots =
-  flow right (List.map dot [accent1,accent2,accent3,accent4])
 
 
 content2 = """
@@ -235,24 +230,6 @@ This next example creates four colorful, rotated crosses.
 It uses `group` to flattens a visual component into a single `Form`,
 making them easy to move and rotate.
 """
-
-
-twoRects colr =
-    group (List.map (filled colr) [ rect 8 30, rect 30 8 ])
-
-
-cross (angle, colr) =
-    collage 50 50 [ rotate (degrees angle) (twoRects colr) ]
-
-
-crosses =
-    flow right <|
-      List.map cross
-        [ ( 0, accent1)
-        , (10, accent2)
-        , (20, accent3)
-        , (30, accent4)
-        ]
 
 
 content3 = """

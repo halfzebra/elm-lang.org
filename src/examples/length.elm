@@ -1,16 +1,15 @@
-
-import Graphics.Element exposing (show)
+import Html exposing (text)
 
 
 main =
-  show (length [1..9])
+  text (toString (length [1..9]))
 
 
 {-| Figure out the length of any list. To find the length of
-list [6,6,6] we need to know that that is pretty syntax for
-the expression (6 :: (6 :: (6 :: []))) where the :: operator
-is putting an element on the front of a list. Evaluation
-looks like this:
+list [6,6,6] we need to know that this devilish list is just
+a convenient way to write (6 :: (6 :: (6 :: []))) where
+the :: operator is putting an element on the front of a list.
+Evaluation looks like this:
 
     length (6 :: (6 :: (6 :: [])))
     1 + (length (6 :: (6 :: [])))
